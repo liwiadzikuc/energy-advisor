@@ -61,3 +61,36 @@ async def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db))
             "current_tariff": user.current_tariff
         }
     }
+    
+class RegisterLocalRequest(BaseModel):
+    email: str
+    password: str
+
+@router.post("/register")
+async def register_local(payload: RegisterLocalRequest, db: Session = Depends(get_db)):
+    existing_user = db.query(User).filter(User.email == payload.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Użytkownik o tym adresie e-mail już istnieje."
+        )
+
+    # Zapisujemy tylko te pola, które fizycznie istnieją w models.py
+    new_user = User(
+        email=payload.email,
+        password_hash=payload.password,
+        current_tariff="G11"
+    )
+    
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {
+        "status": "registered",
+        "user": {
+            "id": str(new_user.id),
+            "email": new_user.email,
+            "current_tariff": new_user.current_tariff
+        }
+    }
