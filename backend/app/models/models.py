@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 from app.database import Base
 import datetime
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB
 
 class Tariff(Base):
     __tablename__ = "tariffs"
@@ -39,3 +40,13 @@ class User(Base):
     
     oauth_provider = Column(String(50), nullable=True) 
     oauth_id = Column(String(255), nullable=True)
+    
+class Simulation(Base):
+    __tablename__ = "simulations"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    
+    results = Column(JSONB, nullable=False)
+    
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
